@@ -30,6 +30,7 @@ client.start().then(() => console.log("Client started!"));
 
 // This is our event handler for dealing with the `!hello` command.
 async function handleCommand(roomId, event) {
+  const sender = event["sender"]
   // Don't handle events that don't have contents (they were probably redacted)
   if (!event["content"]) return;
 
@@ -38,16 +39,28 @@ async function handleCommand(roomId, event) {
 
   // We never send `m.text` messages so this isn't required, however this is
   // how you would filter out events sent by the bot itself.
-  if (event["sender"] === await client.getUserId()) return;
+  if (sender === await client.getUserId()) return;
 
   // Make sure that the event looks like a command we're expecting
   const body = event["content"]["body"];
+  if(!body.startsWith('!poll')) return;
+
 
   // If we've reached this point, we can safely execute the command. We'll
   // send a reply to the user's command saying "Hello World!".
-  const replyBody = "Thank you for sharing your message"; // we don't have any special styling to do.
-  const reply = RichReply.createFor(roomId, event, replyBody, replyBody);
-  reply["msgtype"] = "m.notice";
+  const replyBody = ""; // we don't have any special styling to do.
+  const replyHtml = `New poll from <a href="https://matrix.to/#/${sender}">${sender}</a>
+  </p>
+  Question: <u><i> How many are interested in Node.js ? </i></u>
+  </p>
+  Case your vote by clicking on the reacting to this message ?
+  <br>
+  &#128077; Yes
+  <br>
+  &#128078; No
+  `
+  const reply = RichReply.createFor(roomId, event, replyBody, replyHtml);
+  reply["msgtype"] = "m.text";
   client.sendMessage(roomId, reply);
 }
 
